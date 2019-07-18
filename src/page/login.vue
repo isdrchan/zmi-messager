@@ -6,12 +6,11 @@
             <el-form-item label="密码" class="password-wrapper">
               <el-input v-model="form.password" show-password></el-input>
             </el-form-item>
-            <el-form-item label="记住密码">
+            <el-form-item label="记住密码" size="mini">
               <el-switch v-model="form.remember"></el-switch>
             </el-form-item>
             <el-form-item class="button-wrapper">
-              <el-button type="primary" icon="el-icon-unlock" @click="login">登录</el-button>
-              <el-button type="info" icon="el-icon-setting" @click="openSetting">设置</el-button>
+              <el-button type="primary" icon="el-icon-key" @click="login" :loading="isLoading">登录</el-button>
             </el-form-item>
         </el-form>
     </div>
@@ -19,7 +18,11 @@
 </template>
 
 <script>
-import { setStore, getStore } from '@/utils/utils'
+import { setStore, getStore, removeStore, getValue } from '@/utils/utils'
+import { getAuth, doLogin } from '@/api/getData'
+import GLOBALS from '@/utils/globals'
+import md5 from 'js-md5'
+
 export default {
   data () {
     return {
@@ -27,41 +30,61 @@ export default {
         password: '',
         remember: false
       },
-      gatewayip: ''
+      isLoading: false
     }
   },
   mounted () {
-    console.log(Boolean(getStore('remember')))
-    this.$set(this.form, 'remember', Boolean(parseInt(getStore('remember'))) || false)
-    if (this.form.remember) {
-      this.form.password = getStore('password') || ''
+    this.$set(this.form, GLOBALS.KEY.remember, Boolean(parseInt(getStore(GLOBALS.KEY.remember))) || false)
+    if (this.form.remember && getStore(GLOBALS.KEY.password)) {
+      this.$set(this.form, GLOBALS.KEY.password, window.atob(getStore(GLOBALS.KEY.password)))
     }
-    this.gatewayip = getStore('gatewayip') || '192.168.21.1'
+    setStore(GLOBALS.KEY.gnCount, '1')
   },
   watch: {
     'form.remember': {
       handler (value) {
-        setStore('remember', value === true ? 1 : 0)
+        setStore(GLOBALS.KEY.remember, value ? 1 : 0)
+        if (!value) {
+          removeStore(GLOBALS.KEY.password)
+        }
       }
     }
   },
   methods: {
-    openSetting () {
-      this.$prompt('路由器网关IP地址', '设置', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputPattern: /^$|^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/,
-        inputErrorMessage: '网关IP地址格式不正确',
-        inputPlaceholder: '192.168.21.1',
-        inputValue: this.gatewayip || '192.168.21.1'
-      }).then(({ value }) => {
-        this.gatewayip = value
-        setStore('gatewayip', value)
+    async login () {
+      this.isLoading = true
+      const authRes = await getAuth()
+      if (authRes.status !== 200) {
+        this.$message({
+          type: 'warning',
+          message: '登录失败！请检查：1. 本机是否和路由器在同一局域网 2. setting.json中的网关地址配置项gatewayip是否正确！'
+        })
+        this.isLoading = false
+        return
+      }
+      const auth = authRes.headers.get('www-authenticate')
+      const authArray = auth.split(' ')
+      setStore(GLOBALS.KEY.realm, getValue(authArray[1]))
+      setStore(GLOBALS.KEY.nonce, getValue(authArray[2]))
+      setStore(GLOBALS.KEY.qop, getValue(authArray[3]))
+      setStore(GLOBALS.KEY.ha1, md5(`admin:${getStore(GLOBALS.KEY.realm)}:${this.form.password}`))
+      const loginRes = await doLogin()
+      console.log(loginRes.url)
+      if (loginRes.status === 200) {
+        if (this.form.remember) {
+          setStore(GLOBALS.KEY.password, window.btoa(this.form.password))
+        }
         this.$message({
           type: 'success',
-          message: '已保存网关IP地址: ' + value
+          message: '登录成功！'
         })
-      })
+      } else {
+        this.$message({
+          type: 'error',
+          message: '密码错误，登录失败！'
+        })
+      }
+      this.isLoading = false
     }
   }
 }
@@ -97,5 +120,9 @@ body {
 .form-wrapper {
   width: 400px;
   align-self: center;
+}
+.button-wrapper {
+  text-align: right;
+  margin-right: 130px;
 }
 </style>
