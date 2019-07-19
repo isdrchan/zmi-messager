@@ -78,6 +78,7 @@ export default {
           type: 'success',
           message: '登录成功！'
         })
+        this.$router.push('manage')
       } else {
         this.$message({
           type: 'error',
@@ -92,7 +93,8 @@ export default {
 
 <style>
 body {
-  background-color: #f2f2f2;
+  padding: 0;
+  margin: 0;
 }
 .title {
   font-size: 26px;
@@ -106,6 +108,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #f2f2f2;
 }
 .form-group {
   border: 1px;

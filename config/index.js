@@ -85,7 +85,7 @@ module.exports = {
 
     proxyTable: {
       '/': {
-        target: 'http://192.168.21.1' + setting.gatewayip,
+        target: 'http://' + setting.gatewayip,
         pathRewrite: {
           '^/':''
         }
