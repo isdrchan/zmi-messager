@@ -21,8 +21,8 @@ export default async (url = '', data = {}, type = 'GET', header = {}, method = '
       credentials: 'include',
       method: type,
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Accept': 'application/xml, text/xml, */*; q=0.01',
+        'Content-Type': 'application/xml'
       },
       mode: 'cors',
       cache: 'force-cache'

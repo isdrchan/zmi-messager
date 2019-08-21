@@ -23,3 +23,17 @@ export const doLogin = () => {
   }
   return fetch('/login.cgi', params, 'GET', Object.assign({}, header, GLOBALS.BASE_HEADER))
 }
+
+export const getDetails = () => {
+  const params = {
+    method: 'get',
+    module: 'duster',
+    file: 'status1'
+  }
+  const header = {
+    Authorization: getAuthHeader(GLOBALS.KEY.get),
+    'X-Requested-With': 'XMLHttpRequest',
+    Cookie: 'locale=cn; hard_ver=Ver.A; platform=mifi'
+  }
+  return fetch('/xml_action.cgi', params, 'GET', Object.assign({}, header, GLOBALS.BASE_HEADER))
+}
