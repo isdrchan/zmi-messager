@@ -12,21 +12,22 @@ export default {
   },
   data () {
     return {
+      status: Number,
       dom: Object,
-      xml: String,
-      json: Object,
-      code: String
+      xml: '',
+      code: ''
     }
   },
   async mounted () {
     const res = await getDetails()
     console.log(res)
+    this.status = res.status
     if (res.status === 200) {
       res.text().then((val) => {
         return (new window.DOMParser()).parseFromString(val, 'text/xml')
       }).then((val) => {
-        console.log(val)
         this.dom = val
+        console.log(this.dom)
         this.xml = val.getElementsByTagName('RGW')[0].innerHTML
         this.code = vkbeautify.xml(this.xml)
       }).catch(function (val) {
@@ -38,6 +39,11 @@ export default {
     dom (val) {
       if (val.getElementsByTagName('RGW').length === 0 || val.getElementsByTagName('RGW')[0].children.length === 1) {
         this.logout('登录信息过期，请重新登录！')
+      }
+    },
+    status (val) {
+      if (val !== 200) {
+        this.logout('请检查本机是否和路由器在同一局域网！')
       }
     }
   }

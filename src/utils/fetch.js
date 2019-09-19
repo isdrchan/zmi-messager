@@ -1,6 +1,6 @@
 import { getBaseURL } from './utils'
 
-export default async (url = '', data = {}, type = 'GET', header = {}, method = 'fetch') => {
+export default async (url = '', data = {}, type = 'GET', header = {}, body = '', method = 'fetch') => {
   type = type.toUpperCase()
   url = getBaseURL() + url
 
@@ -32,10 +32,12 @@ export default async (url = '', data = {}, type = 'GET', header = {}, method = '
       requestConfig['headers'][key] = header[key]
     })
 
-    if (type === 'POST') {
+    if (type === 'POST' && body.length === 0) {
       Object.defineProperty(requestConfig, 'body', {
         value: JSON.stringify(data)
       })
+    } else if (type === 'POST') {
+      requestConfig['body'] = body
     }
 
     try {

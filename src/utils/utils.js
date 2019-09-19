@@ -120,3 +120,37 @@ export function formatObj (obj) {
     }
   }
 }
+
+/**
+ * 短信decode
+ */
+export function decode (encodeString) {
+  if (undefined === encodeString) {
+    return ''
+  }
+  var deCodeStr = ''
+  var strLen = encodeString.length / 4
+  for (var idx = 0; idx < strLen; ++idx) {
+    deCodeStr += String.fromCharCode(parseInt(encodeString.substr(idx * 4, 4), 16))
+  }
+  return deCodeStr
+}
+
+/**
+ * 短信encode
+ */
+export function encode (string) {
+  if (undefined === string) {
+    return ''
+  }
+  var code = ''
+  for (var i = 0; i < string.length; ++i) {
+    var charCode = string.charCodeAt(i).toString(16)
+    var paddingLen = 4 - charCode.length
+    for (var j = 0; j < paddingLen; ++j) {
+      charCode = '0' + charCode
+    }
+    code += charCode
+  }
+  return code
+}
