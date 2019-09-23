@@ -6,15 +6,17 @@
     <br>
     <el-row>
       <el-table
+      v-loading="isLoading"
       :data="smsArr"
-      border
-      style="width: 100%">
+      border>
         <el-table-column
           prop="received.#text"
+          width="145"
           label="日期">
         </el-table-column>
         <el-table-column
           prop="from.#text"
+          width="130"
           label="发送号码">
         </el-table-column>
         <el-table-column
@@ -23,12 +25,25 @@
         </el-table-column>
       </el-table>
     </el-row>
+    <br>
+    <el-row class="pagination-wrapper">
+      <el-pagination
+        background
+        hide-on-single-page
+        layout="prev, pager, next"
+        @current-change="currentChange"
+        @prev-click="clickPrev"
+        @next-click="clickNext"
+        :disabled="isLoading"
+        :page-count="pageTotal">
+      </el-pagination>
+    </el-row>
   </div>
 </template>
 
 <script>
 import { getSMS } from '@/api/getData'
-import { xmlToJson } from '@/utils/utils'
+import { xmlToJson, decode, formatTime, isObject } from '@/utils/utils'
 
 export default {
   props: {
@@ -40,6 +55,9 @@ export default {
       dom: Object,
       xml: '',
       json: Object,
+      pageNum: 1,
+      pageTotal: 0,
+      isLoading: false,
       smsArrOriginal: []
     }
   },
@@ -47,16 +65,23 @@ export default {
     this.initSMS()
   },
   computed: {
-    smsArr: () => {
-      console.log('aaa')
-      return (this.smsArrOriginal || []).map((item, key, arr) => {
-        console.log(item.form['#text'])
+    smsArr () {
+      let smsArrTmp = this.smsArrOriginal
+      if (isObject(smsArrTmp)) {
+        smsArrTmp = [smsArrTmp]
+      }
+      return (smsArrTmp || []).map((item, key, arr) => {
+        item.received['#text'] = formatTime(item.received['#text'])
+        item.from['#text'] = decode(item.from['#text'])
+        item.subject['#text'] = decode(item.subject['#text'])
+        return item
       })
     }
   },
   methods: {
-    async initSMS () {
-      const res = await getSMS()
+    async initSMS (pageNum = 1) {
+      this.isLoading = true
+      const res = await getSMS(pageNum)
       console.log(res)
       this.status = res.status
       if (res.status === 200) {
@@ -68,11 +93,22 @@ export default {
           this.json = xmlToJson(val)
           console.log(this.json)
           this.smsArrOriginal = this.json.RGW.message.get_message.message_list.Item
-          console.log(this.json.RGW.message.get_message.message_list.Item)
+          // this.pageNum = Number(this.json.RGW.message.get_message.page_number['#text'])
+          this.pageTotal = Number(this.json.RGW.message.get_message.total_number['#text'])
         }).catch(function (val) {
           console.log(val)
         })
       }
+      this.isLoading = false
+    },
+    async currentChange (val) {
+      this.initSMS(val)
+    },
+    async clickPrev (val) {
+      this.initSMS(val - 1)
+    },
+    async clickNext (val) {
+      this.initSMS(val + 1)
     }
   },
   watch: {
@@ -91,4 +127,7 @@ export default {
 </script>
 
 <style>
+.pagination-wrapper {
+  text-align: right;
+}
 </style>

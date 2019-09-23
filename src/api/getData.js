@@ -38,8 +38,8 @@ export const getDetails = () => {
   return fetch('/xml_action.cgi', params, 'GET', Object.assign({}, header, GLOBALS.BASE_HEADER))
 }
 
-export const getSMS = () => {
-  const body = '<?xml version="1.0" encoding="US-ASCII"?> <RGW><message><flag><message_flag>GET_RCV_SMS_LOCAL</message_flag></flag><get_message><page_number>1</page_number></get_message></message></RGW>'
+export const getSMS = (pageNum = 1) => {
+  const body = `<?xml version="1.0" encoding="US-ASCII"?> <RGW><message><flag><message_flag>GET_RCV_SMS_LOCAL</message_flag></flag><get_message><page_number>${pageNum}</page_number></get_message></message></RGW>`
   const header = {
     Authorization: getAuthHeader(GLOBALS.KEY.post),
     'X-Requested-With': 'XMLHttpRequest',

@@ -154,3 +154,23 @@ export function encode (string) {
   }
   return code
 }
+
+/**
+ * 短信时间format
+ */
+export function formatTime (time) {
+  let date = time.split(',')
+  for (var i = 0; i < date.length - 1; i++) { // the last one is timezone , no need to handle
+    if (date[i] < 10 && date[i].length < 2) { // add 0 if number is smaller than 10
+      date[i] = '0' + date[i]
+    }
+  }
+  return date[0] + '/' + date[1] + '/' + date[2] + ' ' + date[3] + ':' + date[4] + ':' + date[5] // month/day/year hh:mm:ss
+}
+
+/**
+ * 判断是否为对象
+ */
+export function isObject (obj) {
+  return Object.prototype.toString.call(obj) === '[object Object]'
+}
