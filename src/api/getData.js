@@ -1,7 +1,7 @@
 import fetch from '@/utils/fetch'
 import md5 from 'js-md5'
 import GLOBALS from '@/utils/globals'
-import { getStore, getAuthHeader } from '@/utils/utils'
+import { getStore, getAuthHeader, getSmsTime, isGSM7Code, encode } from '@/utils/utils'
 
 export const getAuth = () => fetch('/login.cgi', {}, 'GET', GLOBALS.BASE_HEADER)
 
@@ -40,6 +40,16 @@ export const getDetails = () => {
 
 export const getSMS = (pageNum = 1) => {
   const body = `<?xml version="1.0" encoding="US-ASCII"?> <RGW><message><flag><message_flag>GET_RCV_SMS_LOCAL</message_flag></flag><get_message><page_number>${pageNum}</page_number></get_message></message></RGW>`
+  const header = {
+    Authorization: getAuthHeader(GLOBALS.KEY.post),
+    'X-Requested-With': 'XMLHttpRequest',
+    Cookie: 'locale=cn; hard_ver=Ver.A; platform=mifi'
+  }
+  return fetch('/xml_action.cgi?method=set&module=duster&file=message', {}, 'POST', Object.assign({}, header, GLOBALS.BASE_HEADER), body)
+}
+
+export const sendSMS = (phone, content) => {
+  const body = `<?xml version="1.0" encoding="US-ASCII"?> <RGW><message><flag><message_flag>SEND_SMS</message_flag><sms_cmd>4</sms_cmd></flag><send_save_message><contacts>${phone}</contacts><content>${encode(content)}</content><encode_type>${isGSM7Code(content) ? 'GSM7_default' : 'UNICODE'}</encode_type><sms_time>${getSmsTime()}</sms_time></send_save_message></message></RGW>`
   const header = {
     Authorization: getAuthHeader(GLOBALS.KEY.post),
     'X-Requested-With': 'XMLHttpRequest',

@@ -1,7 +1,8 @@
 <template>
   <div>
-    <el-row>
-      <el-button type="primary">发送短信</el-button>
+    <el-row type="flex" class="row-bg" justify="end">
+      <el-button type="primary" icon="el-icon-chat-line-round" @click="sendSMSDialogVisible = true">发送短信</el-button>
+      <el-button type="success" icon="el-icon-refresh" :loading="isLoading" @click="refreshSMS">刷新</el-button>
     </el-row>
     <br>
     <el-row>
@@ -38,11 +39,30 @@
         :page-count="pageTotal">
       </el-pagination>
     </el-row>
+    <el-dialog title="发送短信"
+      :model="sendSMSForm"
+      :visible.sync="sendSMSDialogVisible"
+      :append-to-body="true"
+      :close-on-press-escape="false"
+      :close-on-click-modal="false">
+      <el-form label-width="50px">
+        <el-form-item label="号码">
+          <el-input v-model="sendSMSForm.phone"></el-input>
+        </el-form-item>
+        <el-form-item label="内容" style="margin-bottom: 0;">
+          <el-input  v-model="sendSMSForm.content" type="textarea"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="sendSMSDialogVisible = false">取 消</el-button>
+        <el-button type="primary" :loading="isSending" @click="doSendSMS">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getSMS } from '@/api/getData'
+import { getSMS, sendSMS } from '@/api/getData'
 import { xmlToJson, decode, formatTime, isObject } from '@/utils/utils'
 
 export default {
@@ -58,7 +78,13 @@ export default {
       pageNum: 1,
       pageTotal: 0,
       isLoading: false,
-      smsArrOriginal: []
+      isSending: false,
+      smsArrOriginal: [],
+      sendSMSDialogVisible: false,
+      sendSMSForm: {
+        phone: '',
+        content: ''
+      }
     }
   },
   async mounted () {
@@ -82,6 +108,7 @@ export default {
     async initSMS (pageNum = 1) {
       this.isLoading = true
       const res = await getSMS(pageNum)
+      console.log(`[第${pageNum}页短信Response]`)
       console.log(res)
       this.status = res.status
       if (res.status === 200) {
@@ -89,8 +116,10 @@ export default {
           return (new window.DOMParser()).parseFromString(val, 'text/xml')
         }).then((val) => {
           this.dom = val
+          console.log(`[第${pageNum}页短信Dom]`)
           console.log(this.dom)
           this.json = xmlToJson(val)
+          console.log(`[第${pageNum}页短信Json]`)
           console.log(this.json)
           this.smsArrOriginal = this.json.RGW.message.get_message.message_list.Item
           // this.pageNum = Number(this.json.RGW.message.get_message.page_number['#text'])
@@ -100,6 +129,39 @@ export default {
         })
       }
       this.isLoading = false
+    },
+    async doSendSMS () {
+      this.isSending = true
+      const res = await sendSMS(this.sendSMSForm.phone, this.sendSMSForm.content)
+      console.log('[发送短信Response]')
+      console.log(res)
+      this.status = res.status
+      if (res.status === 200) {
+        res.text().then((val) => {
+          return (new window.DOMParser()).parseFromString(val, 'text/xml')
+        }).then((val) => {
+          this.dom = val
+          console.log('[发送短信Dom]')
+          console.log(this.dom)
+          this.json = xmlToJson(val)
+          console.log('[发送短信Json]')
+          console.log(this.json)
+          const smsSendStatus = this.json.RGW.message.flag.sms_cmd_status_result['#text']
+          this.$message({
+            type: smsSendStatus === '3' ? 'success' : 'error',
+            message: smsSendStatus === '3' ? '发送成功' : '发送失败'
+          })
+          if (this.sendSMSDialogVisible) {
+            this.sendSMSDialogVisible = !this.sendSMSDialogVisible
+          }
+        }).catch(function (val) {
+          console.log(val)
+        })
+      }
+      this.isSending = false
+    },
+    async refreshSMS () {
+      this.initSMS(this.pageNum)
     },
     async currentChange (val) {
       this.initSMS(val)

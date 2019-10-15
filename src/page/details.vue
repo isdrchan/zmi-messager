@@ -20,6 +20,7 @@ export default {
   },
   async mounted () {
     const res = await getDetails()
+    console.log('[设备详情Response]')
     console.log(res)
     this.status = res.status
     if (res.status === 200) {
@@ -27,6 +28,7 @@ export default {
         return (new window.DOMParser()).parseFromString(val, 'text/xml')
       }).then((val) => {
         this.dom = val
+        console.log('[设备详情Dom]')
         console.log(this.dom)
         this.xml = val.getElementsByTagName('RGW')[0].innerHTML
         this.code = vkbeautify.xml(this.xml)

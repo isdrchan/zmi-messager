@@ -40,13 +40,13 @@ export function getBaseURL () {
  * @param {*} str
  */
 export function getValue (str) {
-  var arr = str.split('=')
+  let arr = str.split('=')
   return arr[1].substring(1, arr[1].indexOf('"', 2))
 }
 
 export function hex (d) {
-  var hD = '0123456789ABCDEF'
-  var h = hD.substr(d & 15, 1)
+  let hD = '0123456789ABCDEF'
+  let h = hD.substr(d & 15, 1)
   while (d > 15) {
     d >>= 4
     h = hD.substr(d & 15, 1) + h
@@ -76,13 +76,13 @@ export function getAuthHeader (method) {
 // Changes XML to JSON
 export function xmlToJson (xml) {
   // Create the return object
-  var obj = {}
+  let obj = {}
   if (xml.nodeType === 1) { // element
     // do attributes
     if (xml.attributes.length > 0) {
       obj['@attributes'] = {}
-      for (var j = 0; j < xml.attributes.length; j++) {
-        var attribute = xml.attributes.item(j)
+      for (let j = 0; j < xml.attributes.length; j++) {
+        let attribute = xml.attributes.item(j)
         obj['@attributes'][attribute.nodeName] = attribute.nodeValue
       }
     }
@@ -91,14 +91,14 @@ export function xmlToJson (xml) {
   }
   // do children
   if (xml.hasChildNodes()) {
-    for (var i = 0; i < xml.childNodes.length; i++) {
-      var item = xml.childNodes.item(i)
-      var nodeName = item.nodeName
+    for (let i = 0; i < xml.childNodes.length; i++) {
+      let item = xml.childNodes.item(i)
+      let nodeName = item.nodeName
       if (typeof obj[nodeName] === 'undefined') {
         obj[nodeName] = xmlToJson(item)
       } else {
         if (typeof obj[nodeName].length === 'undefined') {
-          var old = obj[nodeName]
+          let old = obj[nodeName]
           obj[nodeName] = []
           obj[nodeName].push(old)
         }
@@ -128,9 +128,9 @@ export function decode (encodeString) {
   if (undefined === encodeString) {
     return ''
   }
-  var deCodeStr = ''
-  var strLen = encodeString.length / 4
-  for (var idx = 0; idx < strLen; ++idx) {
+  let deCodeStr = ''
+  let strLen = encodeString.length / 4
+  for (let idx = 0; idx < strLen; ++idx) {
     deCodeStr += String.fromCharCode(parseInt(encodeString.substr(idx * 4, 4), 16))
   }
   return deCodeStr
@@ -143,11 +143,11 @@ export function encode (string) {
   if (undefined === string) {
     return ''
   }
-  var code = ''
-  for (var i = 0; i < string.length; ++i) {
-    var charCode = string.charCodeAt(i).toString(16)
-    var paddingLen = 4 - charCode.length
-    for (var j = 0; j < paddingLen; ++j) {
+  let code = ''
+  for (let i = 0; i < string.length; ++i) {
+    let charCode = string.charCodeAt(i).toString(16)
+    let paddingLen = 4 - charCode.length
+    for (let j = 0; j < paddingLen; ++j) {
       charCode = '0' + charCode
     }
     code += charCode
@@ -160,7 +160,7 @@ export function encode (string) {
  */
 export function formatTime (time) {
   let date = time.split(',')
-  for (var i = 0; i < date.length - 1; i++) { // the last one is timezone , no need to handle
+  for (let i = 0; i < date.length - 1; i++) { // the last one is timezone , no need to handle
     if (date[i] < 10 && date[i].length < 2) { // add 0 if number is smaller than 10
       date[i] = '0' + date[i]
     }
@@ -173,4 +173,35 @@ export function formatTime (time) {
  */
 export function isObject (obj) {
   return Object.prototype.toString.call(obj) === '[object Object]'
+}
+
+export function isGSM7Code (str) {
+  let len = 0
+  for (let i = 0; i < str.length; i++) {
+    let chr = str.charCodeAt(i)
+    if (((chr >= 0x20 && chr <= 0x7f) || chr === 0x20AC || chr === 0x20AC || chr === 0x0c || chr === 0x0a || chr === 0x0d || chr === 0xa1 || chr === 0xa3 || chr === 0xa5 || chr === 0xa7 || chr === 0xbf || chr === 0xc4 || chr === 0xc5 || chr === 0xc6 || chr === 0xc7 || chr === 0xc9 || chr === 0xd1 || chr === 0xd6 || chr === 0xd8 || chr === 0xdc || chr === 0xdf || chr === 0xe0 || chr === 0xe4 || chr === 0xe5 || chr === 0xe6 || chr === 0xe8 || chr === 0xe9 || chr === 0xec || chr === 0xf11 || chr === 0xf2 || chr === 0xf6 || chr === 0xf8 || chr === 0xf9 || chr === 0xfc || chr === 0x3c6 || chr === 0x3a9 || chr === 0x3a8 || chr === 0x3a3 || chr === 0x3a0 || chr === 0x39e || chr === 0x39b || chr === 0x398 || chr === 0x394 || chr === 0x393) && chr !== 0x60) {
+      ++len
+    }
+  }
+  return len === str.length
+}
+
+export function getSmsTime () {
+  let date = new Date()
+  let fullYear = String(date.getFullYear())
+  let year = fullYear.substr(2, fullYear.length - 1)
+  let month = date.getMonth() + 1
+  let day = date.getDate()
+  let hour = date.getHours()
+  let mimute = date.getMinutes()
+  let second = date.getSeconds()
+  let timeZone = 0 - date.getTimezoneOffset() / 60
+  let timeZoneStr = ''
+  if (timeZone > 0) {
+    timeZoneStr = '%2B' + timeZone
+  } else {
+    timeZoneStr = '-' + timeZone
+  }
+  let smsTime = year + ',' + month + ',' + day + ',' + hour + ',' + mimute + ',' + second + ',' + timeZoneStr
+  return smsTime
 }
