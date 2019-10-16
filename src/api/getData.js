@@ -57,3 +57,13 @@ export const sendSMS = (phone, content) => {
   }
   return fetch('/xml_action.cgi?method=set&module=duster&file=message', {}, 'POST', Object.assign({}, header, GLOBALS.BASE_HEADER), body)
 }
+
+export const delSMS = (id) => {
+  const body = `<?xml version="1.0" encoding="US-ASCII"?> <RGW><message><flag><message_flag>DELETE_SMS</message_flag><sms_cmd>6</sms_cmd></flag><get_message><tags>12</tags><mem_store>1</mem_store></get_message><set_message><delete_message_id>${id + ','}</delete_message_id></set_message></message></RGW>`
+  const header = {
+    Authorization: getAuthHeader(GLOBALS.KEY.post),
+    'X-Requested-With': 'XMLHttpRequest',
+    Cookie: 'locale=cn; hard_ver=Ver.A; platform=mifi'
+  }
+  return fetch('/xml_action.cgi?method=set&module=duster&file=message', {}, 'POST', Object.assign({}, header, GLOBALS.BASE_HEADER), body)
+}

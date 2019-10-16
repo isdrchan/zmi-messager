@@ -24,6 +24,14 @@
           prop="subject.#text"
           label="正文">
         </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="50">
+          <template slot-scope="scope">
+            <el-button @click="showDelSMSDialog(scope.row.index['#text'])" type="text" size="small">删除</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-row>
     <br>
@@ -50,7 +58,7 @@
           <el-input v-model="sendSMSForm.phone"></el-input>
         </el-form-item>
         <el-form-item label="内容" style="margin-bottom: 0;">
-          <el-input  v-model="sendSMSForm.content" type="textarea"></el-input>
+          <el-input v-model="sendSMSForm.content" type="textarea"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -58,11 +66,22 @@
         <el-button type="primary" :loading="isSending" @click="doSendSMS">确 定</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      title="提示"
+      :visible.sync="delSMSDialogVisible"
+      :append-to-body="true"
+      width="30%">
+      <span>确定删除吗？</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="delSMSDialogVisible = false">取 消</el-button>
+        <el-button type="danger" :loading="isDeleting" @click="doDelSMS">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getSMS, sendSMS } from '@/api/getData'
+import { getSMS, sendSMS, delSMS } from '@/api/getData'
 import { xmlToJson, decode, formatTime, isObject } from '@/utils/utils'
 
 export default {
@@ -79,8 +98,11 @@ export default {
       pageTotal: 0,
       isLoading: false,
       isSending: false,
+      isDeleting: false,
       smsArrOriginal: [],
+      delSMSId: '',
       sendSMSDialogVisible: false,
+      delSMSDialogVisible: false,
       sendSMSForm: {
         phone: '',
         content: ''
@@ -159,6 +181,43 @@ export default {
         })
       }
       this.isSending = false
+    },
+    async doDelSMS () {
+      this.isDeleting = true
+      const res = await delSMS(this.delSMSId)
+      console.log(`[删除短信id:${this.delSMSId}]`)
+      console.log('[删除短信Response]')
+      console.log(res)
+      this.status = res.status
+      if (res.status === 200) {
+        res.text().then((val) => {
+          return (new window.DOMParser()).parseFromString(val, 'text/xml')
+        }).then((val) => {
+          this.dom = val
+          console.log('[删除短信Dom]')
+          console.log(this.dom)
+          this.json = xmlToJson(val)
+          console.log('[删除短信Json]')
+          console.log(this.json)
+          const smsSendStatus = this.json.RGW.message.flag.sms_cmd_status_result['#text']
+          this.$message({
+            type: smsSendStatus === '3' ? 'success' : 'error',
+            message: smsSendStatus === '3' ? '删除成功' : '删除失败'
+          })
+          if (this.sendSMSDialogVisible) {
+            this.sendSMSDialogVisible = !this.sendSMSDialogVisible
+          }
+        }).catch(function (val) {
+          console.log(val)
+        })
+      }
+      this.isDeleting = false
+      this.delSMSDialogVisible = false
+      this.initSMS(this.pageNum)
+    },
+    showDelSMSDialog (id) {
+      this.delSMSDialogVisible = true
+      this.delSMSId = id
     },
     async refreshSMS () {
       this.initSMS(this.pageNum)
