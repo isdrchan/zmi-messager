@@ -1,21 +1,28 @@
-# zmi-messager
+# zmi-messager / ZMI（紫米）随身路由器网页版短信管理工具
 
-> zmi-messager
+#### 简介
 
-## Build Setup
+一款ZMI（紫米）随身路由器网页版短信管理工具，支持短信分页查看、短信发送、单条短信删除、设备详细信息。由于平时经常需要用到收发短信的功能，苦于ZMI路由器Web管理页面没有直接提供短信管理模块（不知什么原因被隐藏了），并且Android版随身路由器APP响应慢，常驻后台耗电等问题，遂分析了一下通讯协议，做了一个易用的网页版短信管理工具。
 
-``` bash
-# install dependencies
+#### 兼容
+- [x] MF855
+
+#### 原料
+- Vue2
+- Element UI
+
+#### 用法
+1. 在项目根目录下的 **setting.json** 文件中配置属性 **gatewayip** 的值为路由器的网关IP
+2. 
+```
 npm install
-
-# serve with hot reload at localhost:8080
+```
+3. 
+```
 npm run dev
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
 ```
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+#### 截图
+- 登录
+- 设备详情
+- 短信管理
