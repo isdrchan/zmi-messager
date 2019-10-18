@@ -13,14 +13,14 @@
 
 #### 用法
 1. 在项目根目录下的 **setting.json** 文件中配置属性 **gatewayip** 的值为路由器的网关IP
-2. 
-```
-npm install
-```
-3. 
-```
-npm run dev
-```
+2. install
+    ```
+    npm install
+    ```
+3. run
+    ```
+    npm run dev
+    ```
 
 #### 截图
 - 登录
